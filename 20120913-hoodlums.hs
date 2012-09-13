@@ -29,9 +29,16 @@ prefs = [ Pref "A" [0, 1],
 	  Pref "D" [0, 1]]
 
 
--- So given a list of schools, and for each school a list of all students in order of preference, and given a list of students with a list of their ordered preference of schools, give a list of offers (1 per student) that gives the best student-school-preference.
---
--- our algorithm is simple.  We take a student, try to match them up to their first choice, if they appear in the first schoolPan of students.  If so, we make an offer, if not, we move on to the next student, and then look up the students second choice, and so fourth.
+-- So given a list of schools, and for each school a list of all students in 
+-- order of preference, and given a list of students with a list of their 
+-- ordered preference of schools, give a list of offers (1 per student) that 
+-- gives the best student-school-preference.
+
+-- our algorithm is simple.  We take a student, try to match them up to their 
+-- first choice, if they appear in the first schoolPan of students.  If so, we 
+-- make an offer, if not, we move on to the next student, and then look up the 
+-- students second choice, and so fourth.
+
 type State = (Vector Int, [Offer], [Pref])
 
 -- so this is what the meetup came up with..
@@ -66,7 +73,31 @@ allocate school prefs = offers
 				      conditionalInc i pan | i == sch 	= pan
 							   | otherwise 	= pan + 1 
 
---and here is my attempt at a lispy solution:
---allocate' :: [School] -> [Pref] -> [Offer]
---allocate' (_ []) ->sdfa 
-	
+-- and here is my attempt at a lispy solution:
+
+isInSchool :: Pref -> [School] -> Bool
+isInSchool pref schools = student `elem` candidates
+    where school = schools !! (head $ prefChoices pref) 
+          student = prefStudent pref
+          candidates = take (schPan school) (schPriority school)
+
+pref_to_offer :: Pref -> Offer
+pref_to_offer pref = (Offer (prefStudent pref) (head $ prefChoices pref))
+
+updatePref :: Pref -> Pref
+updatePref p@(Pref s (h:choices)) = (Pref s choices)
+
+allocateStudent :: Student -> School -> School
+allocateStudent student school@(School pan candidates) = 
+    (School pan 
+            [x | x <- candidates, x /= student])
+allocate' :: [School] -> [Pref] -> [Offer]
+allocate' _ [] = []
+allocate' schools (pref:rest) 
+    | isInSchool pref schools = pref_to_offer pref : allocate' newSchools rest
+    | otherwise               = allocate' schools (rest ++ [updatePref pref])
+    where newSchools = [if i == (head $ prefChoices pref) 
+                        then (allocateStudent (prefStudent pref) s)
+                        else s | (s,i) <- (zip schools [0..])] 
+-- I think that works.  but it's late and bedtime, I'm all out of time for this
+-- one
