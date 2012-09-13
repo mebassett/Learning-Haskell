@@ -68,5 +68,5 @@ allocate school prefs = offers
 
 --and here is my attempt at a lispy solution:
 --allocate' :: [School] -> [Pref] -> [Offer]
---allocate' (_ []) -> 
+--allocate' (_ []) ->sdfa 
 	
